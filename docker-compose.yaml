@@ -48,9 +48,6 @@ services:
 networks:
   esus_network:
     driver: bridge
-  caddy:
-    external: true
-    name: ${CADDY_DOCKER_NETWORK:-caddy}
 volumes:
   db_data:
   web_data:
