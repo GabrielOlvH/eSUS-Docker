@@ -18,13 +18,9 @@ RUN apt-get install -y ttf-mscorefonts-installer wget curl
 #Instala o init e o file porque o instalador do ESUS executa esses comandos.
 RUN apt-get install -y init
 RUN apt-get install -y file
-#Instala o cliente PostgreSQL para limpeza de locks do Liquibase
-RUN apt-get install -y postgresql-client systemd
+#Instala o cliente PostgreSQL para limpeza de locks do Liquibase e SystemD
+RUN apt-get install -y postgresql-client systemd systemd-sysv
 RUN apt clean
-
-#Workaround para bypass da verificação de SystemD no container Docker
-RUN ln -sf /bin/true /usr/bin/systemctl || true
-RUN echo "systemd" > /proc/1/comm || true
 
 #Define o fuso horário, coloque o fuso horário de sua região.
 RUN rm -rf /etc/localtime
@@ -32,14 +28,24 @@ RUN ln -s /usr/share/zoneinfo/Etc/GMT+4 /etc/localtime
 #Aplique o mesmo fuso horário do localtime, essa variável de ambiente é necessária para o Java pergar corretamente o fuso.
 ENV TZ=Etc/GMT+4
 
-#Copia e dá permissão de execução ao script de inicializacão.
+#Copia e dá permissão de execução ao script de inicializacão.
 COPY startup.sh /opt
 RUN chmod +x /opt/startup.sh
+
+#Configura o serviço SystemD para executar na inicialização
+COPY esus.service /etc/systemd/system/
+RUN systemctl enable esus.service || true
 
 RUN mkdir -p /opt/bootstrap /opt/e-SUS
 WORKDIR /opt/bootstrap
 RUN wget -O eSUS-AB-PEC.jar ${URL_DOWNLOAD_ESUS} --no-check-certificate
 #Extrai o migrador do banco de dados para ser executado na inicialização.
 RUN jar xf eSUS-AB-PEC.jar && cp container/database/migrador.jar /opt/bootstrap/ && rm -rf container
+
 EXPOSE 8080 8090
-ENTRYPOINT ["/opt/startup.sh"]
+
+# SystemD requires this volume
+VOLUME ["/sys/fs/cgroup"]
+
+# Use SystemD as init
+CMD ["/sbin/init"]

@@ -29,11 +29,13 @@ services:
       - APP_DB_PASSWORD=esus
     volumes:
       - web_data:/opt/e-SUS
+      - /sys/fs/cgroup:/sys/fs/cgroup:ro
     networks:
       esus_network:
     ports:
       - "${WEB_PORT:-8080}:8090"
     restart: unless-stopped
+    privileged: true
     depends_on:
       database:
         condition: service_healthy
