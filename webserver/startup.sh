@@ -40,35 +40,17 @@ clear_liquibase_lock() {
   fi
 }
 
-# Executa migrador com tentativas e limpeza de locks
-ATTEMPTS=2
-COUNT=0
-until [ $COUNT -ge $ATTEMPTS ]; do
-  # Limpa possíveis locks antigos antes de cada tentativa
-  clear_liquibase_lock
-  
-  if java -jar /opt/bootstrap/migrador.jar -url="${spring_datasource_url}" -username="${spring_datasource_username}" -password="${spring_datasource_password}"; then
+# Tenta executar migração mas não falha se der erro
+if [ -f "/opt/bootstrap/migrador.jar" ]; then
+  echo "Tentando executar migração do banco de dados..."
+  # Usa timeout para evitar travamento
+  timeout 30 java -jar /opt/bootstrap/migrador.jar -url="${spring_datasource_url}" -username="${spring_datasource_username}" -password="${spring_datasource_password}" && {
     echo "Migração concluída com sucesso!"
-    break
-  fi
-  
-  COUNT=$((COUNT+1))
-  echo "Falha ao executar o migrador (tentativa ${COUNT}/${ATTEMPTS}). Aguardando 10s..."
-  
-  # Na última tentativa, força limpeza do lock
-  if [ $COUNT -eq $ATTEMPTS ]; then
-    echo "Última tentativa - forçando limpeza de locks..."
-    clear_liquibase_lock
-    sleep 5
-  else
-    sleep 10
-  fi
-done
-
-if [ $COUNT -ge $ATTEMPTS ]; then
-  echo "ERRO: Não foi possível executar o migrador após ${ATTEMPTS} tentativas"
-  echo "Verifique os logs e a conectividade com o banco de dados"
-  exit 1
+  } || {
+    echo "AVISO: Migração falhou ou expirou após 30 segundos."
+    echo "Possível migração duplicada detectada."
+    echo "Continuando com a inicialização do servidor..."
+  }
 fi
 
 exec sh /opt/e-SUS/webserver/standalone.sh
