@@ -41,7 +41,7 @@ clear_liquibase_lock() {
 }
 
 # Executa migrador com tentativas e limpeza de locks
-ATTEMPTS=12
+ATTEMPTS=2
 COUNT=0
 until [ $COUNT -ge $ATTEMPTS ]; do
   # Limpa possíveis locks antigos antes de cada tentativa
