@@ -43,5 +43,5 @@ RUN jar xf eSUS-AB-PEC.jar
 RUN cp container/database/migrador.jar /opt/e-SUS
 #Limpa os aquivos baixados e extraídos.
 RUN rm -r /home/downloads/*
-EXPOSE 8080
+EXPOSE 8090
 ENTRYPOINT ["/opt/startup.sh"]
