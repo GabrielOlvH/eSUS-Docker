@@ -24,7 +24,7 @@ services:
         - APP_DB_USER=postgres
         - APP_DB_PASSWORD=esus
     ports:
-      - '8080:8080'
+      - '8080:8090'
     networks:
       - esus_network
     depends_on:
