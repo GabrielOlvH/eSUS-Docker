@@ -26,16 +26,49 @@ if [ ! -x "/opt/e-SUS/webserver/standalone.sh" ]; then
   echo "s" | java -jar /opt/bootstrap/eSUS-AB-PEC.jar -console -url="${spring_datasource_url}" -username="${spring_datasource_username}" -password="${spring_datasource_password}"
 fi
 
-# Executa migrador com tentativas
-#ATTEMPTS=12
-#COUNT=0
-#until [ $COUNT -ge $ATTEMPTS ]; do
-#  if java -jar /opt/bootstrap/migrador.jar -url="${spring_datasource_url}" -username="${spring_datasource_username}" -password="${spring_datasource_password}"; then
-#    break
-#  fi
-#  COUNT=$((COUNT+1))
-#  echo "Falha ao executar o migrador (tentativa ${COUNT}/${ATTEMPTS}). Aguardando 10s..."
-#  sleep 10
-#done
+# Função para limpar locks do Liquibase
+clear_liquibase_lock() {
+  echo "Verificando locks do Liquibase..."
+  # Extrai host, porta e database da URL JDBC
+  DB_HOST=$(echo "${spring_datasource_url}" | sed 's/.*\/\/\([^:]*\).*/\1/')
+  DB_PORT=$(echo "${spring_datasource_url}" | sed 's/.*:\([0-9]*\)\/.*/\1/')
+  DB_NAME=$(echo "${spring_datasource_url}" | sed 's/.*\/\([^?]*\).*/\1/')
+  
+  # Tenta limpar lock via psql se disponível
+  if command -v psql >/dev/null 2>&1; then
+    PGPASSWORD="${spring_datasource_password}" psql -h "${DB_HOST}" -p "${DB_PORT}" -U "${spring_datasource_username}" -d "${DB_NAME}" -c "DELETE FROM databasechangeloglock WHERE locked = true;" 2>/dev/null || true
+  fi
+}
+
+# Executa migrador com tentativas e limpeza de locks
+ATTEMPTS=12
+COUNT=0
+until [ $COUNT -ge $ATTEMPTS ]; do
+  # Limpa possíveis locks antigos antes de cada tentativa
+  clear_liquibase_lock
+  
+  if java -jar /opt/bootstrap/migrador.jar -url="${spring_datasource_url}" -username="${spring_datasource_username}" -password="${spring_datasource_password}"; then
+    echo "Migração concluída com sucesso!"
+    break
+  fi
+  
+  COUNT=$((COUNT+1))
+  echo "Falha ao executar o migrador (tentativa ${COUNT}/${ATTEMPTS}). Aguardando 10s..."
+  
+  # Na última tentativa, força limpeza do lock
+  if [ $COUNT -eq $ATTEMPTS ]; then
+    echo "Última tentativa - forçando limpeza de locks..."
+    clear_liquibase_lock
+    sleep 5
+  else
+    sleep 10
+  fi
+done
+
+if [ $COUNT -ge $ATTEMPTS ]; then
+  echo "ERRO: Não foi possível executar o migrador após ${ATTEMPTS} tentativas"
+  echo "Verifique os logs e a conectividade com o banco de dados"
+  exit 1
+fi
 
 exec sh /opt/e-SUS/webserver/standalone.sh

@@ -18,6 +18,8 @@ RUN apt-get install -y ttf-mscorefonts-installer wget curl
 #Instala o init e o file porque o instalador do ESUS executa esses comandos.
 RUN apt-get install -y init
 RUN apt-get install -y file
+#Instala o cliente PostgreSQL para limpeza de locks do Liquibase
+RUN apt-get install -y postgresql-client
 RUN apt clean
 
 #Define o fuso horário, coloque o fuso horário de sua região.
