@@ -1,37 +1,48 @@
 services:
   database:
-    container_name: esus_database
-    image: esus_database:1.0.0
+    # container_name removed for multi-instance deploys
     build: database
-    ports:
-      - '5432:5432'
+    environment:
+      - POSTGRES_DB=esus
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=esus
+    volumes:
+      - db_data:/var/lib/postgresql/data
     networks:
       - esus_network
+    restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
       interval: 10s
       retries: 5
       start_period: 30s
       timeout: 10s
   webserver:
-    container_name: esus_webserver
-    image: esus_webserver:5.4.11
+    # container_name removed for multi-instance deploys
     build:
       context: webserver
       args:
-        - URL_DOWNLOAD_ESUS=https://arquivos.esusab.ufsc.br/PEC/bf36cd4a36f49f8e/5.4.11/eSUS-AB-PEC-5.4.11-Linux64.jar
-        - APP_DB_URL
-        - APP_DB_USER=postgres
-        - APP_DB_PASSWORD=esus
-    ports:
-      - '8080:8090'
+        - URL_DOWNLOAD_ESUS=${URL_DOWNLOAD_ESUS:-https://arquivos.esusab.ufsc.br/PEC/bf36cd4a36f49f8e/5.4.11/eSUS-AB-PEC-5.4.11-Linux64.jar}
+    environment:
+      - APP_DB_URL=jdbc:postgresql://database:5432/esus
+      - APP_DB_USER=postgres
+      - APP_DB_PASSWORD=esus
+    volumes:
+      - web_data:/opt/e-SUS
     networks:
-      - esus_network
+      esus_network:
+      caddy:
+        aliases:
+          - ${ESUS_SERVICE_ALIAS:-esus-webserver}
+    restart: unless-stopped
     depends_on:
       database:
         condition: service_healthy
+    labels:
+      - caddy=${ESUS_HOST}
+      - caddy.reverse_proxy="{{upstreams 8090}}"
     healthcheck:
-      test: "curl -f http://localhost:8080"
+      test: ["CMD-SHELL", "curl -sf http://localhost:8080 || curl -sf http://localhost:8090"]
       interval: 10s
       retries: 5
       start_period: 30s
@@ -39,3 +50,9 @@ services:
 networks:
   esus_network:
     driver: bridge
+  caddy:
+    external: true
+    name: ${CADDY_DOCKER_NETWORK:-caddy}
+volumes:
+  db_data:
+  web_data:
