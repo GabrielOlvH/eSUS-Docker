@@ -13,7 +13,7 @@ do
   STATUS=$(docker inspect --format='{{.State.Health.Status}}' $CONTAINER)
 done
 
-export APP_DB_URL="jdbc:postgresql://$(hostname -I | awk '{print $1}'):5433/esus"
+export APP_DB_URL="jdbc:postgresql://$(hostname -I | awk '{print $1}'):5432/esus"
 
 echo "Iniciando o build do serviço webservice ..."
 docker compose up -d webserver
