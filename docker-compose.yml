@@ -15,11 +15,11 @@ services:
       timeout: 10s
   webserver:
     container_name: esus_webserver
-    image: esus_webserver:5.2.31
+    image: esus_webserver:5.4.11
     build:
       context: webserver
       args:
-        - URL_DOWNLOAD_ESUS=https://arquivos.esusab.ufsc.br/PEC/1af9b7ee9c3886bd/5.3.21/eSUS-AB-PEC-5.3.21-Linux64.jar
+        - URL_DOWNLOAD_ESUS=https://arquivos.esusab.ufsc.br/PEC/bf36cd4a36f49f8e/5.4.11/eSUS-AB-PEC-5.4.11-Linux64.jar
         - APP_DB_URL
         - APP_DB_USER=postgres
         - APP_DB_PASSWORD=esus
