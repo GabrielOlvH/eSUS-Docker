@@ -31,9 +31,6 @@ services:
       - web_data:/opt/e-SUS
     networks:
       esus_network:
-      caddy:
-        aliases:
-          - ${ESUS_SERVICE_ALIAS:-esus-webserver}
     restart: unless-stopped
     depends_on:
       database:
