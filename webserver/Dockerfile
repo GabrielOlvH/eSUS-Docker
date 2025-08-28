@@ -3,7 +3,7 @@ FROM openjdk:17-jdk-bullseye
 #Link para download do instalador versão Linux.
 ARG URL_DOWNLOAD_ESUS="https://arquivos.esusab.ufsc.br/PEC/1af9b7ee9c3886bd/5.3.21/eSUS-AB-PEC-5.3.21-Linux64.jar"
 #Configurações de conexão com o banco de dados. Por padrão assume que esteja na máquina host
-ARG APP_DB_URL="jdbc:postgresql://host.docker.internal:5433/esus"
+ARG APP_DB_URL="jdbc:postgresql://host.docker.internal:5432/esus"
 ARG APP_DB_USER="postgres"
 ARG APP_DB_PASSWORD="esus"
 
