@@ -27,15 +27,15 @@ if [ ! -x "/opt/e-SUS/webserver/standalone.sh" ]; then
 fi
 
 # Executa migrador com tentativas
-ATTEMPTS=12
-COUNT=0
-until [ $COUNT -ge $ATTEMPTS ]; do
-  if java -jar /opt/bootstrap/migrador.jar -url="${spring_datasource_url}" -username="${spring_datasource_username}" -password="${spring_datasource_password}"; then
-    break
-  fi
-  COUNT=$((COUNT+1))
-  echo "Falha ao executar o migrador (tentativa ${COUNT}/${ATTEMPTS}). Aguardando 10s..."
-  sleep 10
-done
+#ATTEMPTS=12
+#COUNT=0
+#until [ $COUNT -ge $ATTEMPTS ]; do
+#  if java -jar /opt/bootstrap/migrador.jar -url="${spring_datasource_url}" -username="${spring_datasource_username}" -password="${spring_datasource_password}"; then
+#    break
+#  fi
+#  COUNT=$((COUNT+1))
+#  echo "Falha ao executar o migrador (tentativa ${COUNT}/${ATTEMPTS}). Aguardando 10s..."
+#  sleep 10
+#done
 
 exec sh /opt/e-SUS/webserver/standalone.sh
