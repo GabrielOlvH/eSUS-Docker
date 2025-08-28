@@ -1,5 +1,10 @@
 #!/bin/sh
 
+# Workaround para bypass da verificação de SystemD
+export SYSTEMD_IGNORE_CHROOT=1
+echo "systemd" > /tmp/fake-systemd || true
+mount --bind /tmp/fake-systemd /proc/1/comm 2>/dev/null || true
+
 CONFIG_FILE="/opt/e-SUS/webserver/config/application.properties"
 
 # Carrega configurações do application.properties se existir

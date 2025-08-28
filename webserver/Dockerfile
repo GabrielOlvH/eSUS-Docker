@@ -19,8 +19,12 @@ RUN apt-get install -y ttf-mscorefonts-installer wget curl
 RUN apt-get install -y init
 RUN apt-get install -y file
 #Instala o cliente PostgreSQL para limpeza de locks do Liquibase
-RUN apt-get install -y postgresql-client
+RUN apt-get install -y postgresql-client systemd
 RUN apt clean
+
+#Workaround para bypass da verificação de SystemD no container Docker
+RUN ln -sf /bin/true /usr/bin/systemctl || true
+RUN echo "systemd" > /proc/1/comm || true
 
 #Define o fuso horário, coloque o fuso horário de sua região.
 RUN rm -rf /etc/localtime
