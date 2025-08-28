@@ -4,7 +4,7 @@ services:
     image: esus_database:1.0.0
     build: database
     ports:
-      - '5432:5432'
+      - '5433:5433'
     networks:
       - esus_network
     healthcheck:
